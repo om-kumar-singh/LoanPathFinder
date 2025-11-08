@@ -1,0 +1,3 @@
+# This directory will contain trained ML models
+# Add your trained loan_model.pkl and shap_explainer.pkl files here
+

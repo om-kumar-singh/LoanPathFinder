@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { auth } from '../firebaseConfig';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -56,17 +57,38 @@ const WhatIfSimulator = ({ financialData, setFinancialData }) => {
   };
 
   const saveSimulation = async () => {
+    const user = auth.currentUser;
+    
+    if (!user) {
+      alert('Please log in to save simulations');
+      return;
+    }
+    
+    if (!currentScore) {
+      alert('No score to save. Please wait for the calculation to complete.');
+      return;
+    }
+    
     try {
-      await axios.post(`${API_URL}/api/simulations`, {
-        userId: 'current-user', // Replace with actual user ID from Firebase
-        financialData,
+      const response = await axios.post(`${API_URL}/api/simulations`, {
+        userId: user.uid,
+        financialData: dataToUse || {},
         score: currentScore,
+        explanation: {},
+        riskCategory: currentScore >= 75 ? 'Low' : currentScore >= 50 ? 'Moderate' : 'High',
+        estimatedAPR: 0,
         timestamp: new Date().toISOString()
       });
-      alert('Simulation saved successfully!');
+      
+      if (response.data && response.data.message) {
+        alert('Simulation saved successfully!');
+      } else {
+        alert('Simulation saved successfully!');
+      }
     } catch (err) {
       console.error('Error saving simulation:', err);
-      alert('Failed to save simulation');
+      const errorMsg = err.response?.data?.error || err.message || 'Failed to save simulation';
+      alert(`Failed to save simulation: ${errorMsg}`);
     }
   };
 

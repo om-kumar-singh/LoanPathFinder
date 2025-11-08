@@ -2,7 +2,9 @@ import express from 'express';
 import {
   syncUser,
   getUserPreferences,
-  updateUserPreferences
+  updateUserPreferences,
+  getUserProfile,
+  updateUserProfile
 } from '../services/firestoreService.js';
 
 const router = express.Router();
@@ -42,6 +44,28 @@ router.put('/:uid/preferences', async (req, res) => {
     res.json(preferences);
   } catch (error) {
     console.error('Error updating preferences:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user profile
+router.get('/:uid/profile', async (req, res) => {
+  try {
+    const profile = await getUserProfile(req.params.uid);
+    res.json(profile);
+  } catch (error) {
+    console.error('Error getting profile:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update user profile
+router.put('/:uid/profile', async (req, res) => {
+  try {
+    const profile = await updateUserProfile(req.params.uid, req.body);
+    res.json(profile);
+  } catch (error) {
+    console.error('Error updating profile:', error);
     res.status(500).json({ error: error.message });
   }
 });

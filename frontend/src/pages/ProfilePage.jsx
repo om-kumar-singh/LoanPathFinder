@@ -10,6 +10,12 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('history');
+  const [profile, setProfile] = useState({ name: '', gender: '', age: '', email: '' });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState('');
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', gender: '', age: '' });
   
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -36,8 +42,38 @@ const ProfilePage = () => {
       }
     };
 
+    const fetchProfile = async () => {
+      if (user?.uid) {
+        try {
+          const response = await axios.get(`${API_URL}/api/users/${user.uid}/profile`);
+          const profileData = response.data || {};
+          setProfile({
+            name: profileData.name || '',
+            gender: profileData.gender || '',
+            age: profileData.age || null,
+            email: profileData.email || user?.email || ''
+          });
+          setEditForm({
+            name: profileData.name || '',
+            gender: profileData.gender || '',
+            age: profileData.age || ''
+          });
+        } catch (err) {
+          console.error('Error fetching profile:', err);
+          // Set default empty profile if fetch fails
+          setProfile({
+            name: '',
+            gender: '',
+            age: null,
+            email: user?.email || ''
+          });
+        }
+      }
+    };
+
     if (user) {
       fetchSimulations();
+      fetchProfile();
     }
   }, [user]);
 
@@ -69,12 +105,12 @@ const ProfilePage = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-deep-blue mb-2">
+    <div className="container mx-auto px-4 py-6 md:py-8">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-4xl font-bold text-deep-blue mb-2">
           👤 Your Profile
         </h1>
-        <p className="text-primary-text opacity-70">
+        <p className="text-primary-text opacity-70 text-sm md:text-base">
           Manage your account and view your loan assessment history
         </p>
       </div>
@@ -140,12 +176,12 @@ const ProfilePage = () => {
 
       {/* Tabs */}
       <div className="neumorphic-card mb-6">
-        <div className="flex space-x-4 border-b border-gray-200 mb-6">
+        <div className="flex flex-wrap space-x-2 md:space-x-4 border-b border-gray-200 mb-6 overflow-x-auto">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`pb-4 px-4 font-semibold transition-colors ${
+              className={`pb-4 px-2 md:px-4 font-semibold transition-colors whitespace-nowrap text-sm md:text-base ${
                 activeTab === tab.id
                   ? 'text-primary-teal border-b-2 border-primary-teal'
                   : 'text-primary-text opacity-70 hover:text-primary-teal'
@@ -235,16 +271,163 @@ const ProfilePage = () => {
             <h3 className="text-xl font-bold text-deep-blue mb-4">
               Account Settings
             </h3>
-            <div className="space-y-4">
-              <div className="p-4 bg-light-gray rounded-lg">
-                <p className="text-primary-text opacity-70 mb-2">
-                  To change your password or update account settings, please use Firebase Authentication.
-                </p>
-                <p className="text-sm text-primary-text opacity-60">
-                  Account management is handled through Firebase Auth. You can update your profile in the Firebase Console.
-                </p>
+            
+            {profileError && (
+              <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                {profileError}
               </div>
-            </div>
+            )}
+            
+            {profileSuccess && (
+              <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                {profileSuccess}
+              </div>
+            )}
+
+            {!isEditing ? (
+              <div className="space-y-4">
+                <div className="neumorphic-card">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-primary-text opacity-70 text-sm">Name</label>
+                      <div className="text-deep-blue font-semibold mt-1">
+                        {profile.name ? profile.name : <span className="text-gray-400 italic">Not set</span>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-primary-text opacity-70 text-sm">Gender</label>
+                      <div className="text-deep-blue font-semibold mt-1">
+                        {profile.gender ? profile.gender : <span className="text-gray-400 italic">Not set</span>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-primary-text opacity-70 text-sm">Age</label>
+                      <div className="text-deep-blue font-semibold mt-1">
+                        {profile.age ? profile.age : <span className="text-gray-400 italic">Not set</span>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-primary-text opacity-70 text-sm">Email</label>
+                      <div className="text-deep-blue font-semibold mt-1">
+                        {profile.email || user?.email || 'Not set'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="btn-primary"
+                >
+                  Edit Profile
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="neumorphic-card">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-deep-blue font-semibold mb-2">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                        className="input-field"
+                        placeholder="Enter your name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-deep-blue font-semibold mb-2">
+                        Gender
+                      </label>
+                      <select
+                        value={editForm.gender}
+                        onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
+                        className="input-field"
+                      >
+                        <option value="">Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-deep-blue font-semibold mb-2">
+                        Age
+                      </label>
+                      <input
+                        type="number"
+                        value={editForm.age}
+                        onChange={(e) => setEditForm({ ...editForm, age: e.target.value })}
+                        className="input-field"
+                        placeholder="Enter your age"
+                        min="1"
+                        max="120"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-primary-text opacity-70 text-sm">Email</label>
+                      <div className="text-deep-blue font-semibold mt-1">
+                        {profile.email || user?.email || 'Not set'}
+                      </div>
+                      <p className="text-xs text-primary-text opacity-60 mt-1">
+                        Email cannot be changed here. Use Firebase Authentication to update email.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                  <button
+                    onClick={async () => {
+                      setProfileLoading(true);
+                      setProfileError('');
+                      setProfileSuccess('');
+                      try {
+                        const response = await axios.put(
+                          `${API_URL}/api/users/${user.uid}/profile`,
+                          {
+                            name: editForm.name,
+                            gender: editForm.gender,
+                            age: editForm.age ? parseInt(editForm.age) : null,
+                            email: profile.email || user?.email
+                          }
+                        );
+                        setProfile(response.data);
+                        setIsEditing(false);
+                        setProfileSuccess('Profile updated successfully!');
+                        setTimeout(() => setProfileSuccess(''), 3000);
+                      } catch (err) {
+                        console.error('Error updating profile:', err);
+                        setProfileError('Failed to update profile. Please try again.');
+                      } finally {
+                        setProfileLoading(false);
+                      }
+                    }}
+                    className="btn-primary"
+                    disabled={profileLoading}
+                  >
+                    {profileLoading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditForm({
+                        name: profile.name || '',
+                        gender: profile.gender || '',
+                        age: profile.age || ''
+                      });
+                      setProfileError('');
+                      setProfileSuccess('');
+                    }}
+                    className="px-4 py-2 border-2 border-primary-text text-primary-text rounded-lg hover:bg-light-gray transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

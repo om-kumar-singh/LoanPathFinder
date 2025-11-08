@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,11 +14,31 @@ const Login = () => {
     e.preventDefault();
     setError('');
     try {
+      let userCredential;
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
       }
+      
+      // Sync user to backend/Firestore
+      if (userCredential?.user) {
+        try {
+          const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+          await fetch(`${API_URL}/api/users/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              firebaseUID: userCredential.user.uid,
+              email: userCredential.user.email
+            })
+          });
+        } catch (syncError) {
+          console.error('Error syncing user:', syncError);
+          // Don't block login if sync fails
+        }
+      }
+      
       navigate('/dashboard');
     } catch (error) {
       console.error('Auth error:', error);
@@ -36,7 +56,26 @@ const Login = () => {
     setError('');
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      
+      // Sync user to backend/Firestore
+      if (result?.user) {
+        try {
+          const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+          await fetch(`${API_URL}/api/users/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              firebaseUID: result.user.uid,
+              email: result.user.email
+            })
+          });
+        } catch (syncError) {
+          console.error('Error syncing user:', syncError);
+          // Don't block login if sync fails
+        }
+      }
+      
       navigate('/dashboard');
     } catch (error) {
       console.error('Google auth error:', error);
@@ -50,24 +89,6 @@ const Login = () => {
     }
   };
 
-  const handleGithubSignIn = async () => {
-    setError('');
-    try {
-      const provider = new GithubAuthProvider();
-      await signInWithPopup(auth, provider);
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('GitHub auth error:', error);
-      if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
-        setError('GitHub sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method → GitHub. Or use Email/Password or Google sign-in instead.');
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        // User closed the popup, don't show error
-        return;
-      } else {
-        setError(error.message);
-      }
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -136,14 +157,6 @@ const Login = () => {
           >
             <span>🔵</span>
             <span>Google</span>
-          </button>
-
-          <button
-            onClick={handleGithubSignIn}
-            className="w-full bg-white text-primary-text py-3 rounded-lg border-2 border-primary-text hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2"
-          >
-            <span>⚫</span>
-            <span>GitHub</span>
           </button>
         </div>
       </div>

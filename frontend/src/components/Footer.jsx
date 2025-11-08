@@ -1,12 +1,13 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Footer = () => {
+  const navigate = useNavigate();
   return (
     <footer className="bg-deep-blue text-white mt-auto">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 md:py-8">
         <div className="border-t-2" style={{ borderImage: 'linear-gradient(90deg, #05339C, #41A67E) 1' }}>
-          <div className="pt-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="pt-4 md:pt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
             <div>
               <h3 className="text-xl font-bold mb-4">LoanPathfinder</h3>
               <p className="text-gray-300 text-sm">
@@ -37,19 +38,28 @@ const Footer = () => {
               <h4 className="font-semibold mb-4">Legal</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-highlight-yellow transition-colors">
+                  <button
+                    onClick={() => navigate('/about')}
+                    className="text-gray-300 hover:text-highlight-yellow transition-colors text-left"
+                  >
                     About
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-highlight-yellow transition-colors">
+                  <button
+                    onClick={() => navigate('/privacy')}
+                    className="text-gray-300 hover:text-highlight-yellow transition-colors text-left"
+                  >
                     Privacy Policy
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-highlight-yellow transition-colors">
+                  <button
+                    onClick={() => navigate('/contact')}
+                    className="text-gray-300 hover:text-highlight-yellow transition-colors text-left"
+                  >
                     Contact
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>

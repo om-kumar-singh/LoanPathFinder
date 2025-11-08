@@ -9,6 +9,9 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage';
 import StatisticsPage from './pages/StatisticsPage';
+import About from './pages/About';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import Contact from './pages/Contact';
 import UserForm from './components/UserForm';
 import './App.css';
 
@@ -36,7 +39,7 @@ function App() {
   return (
     <Router>
       <div className="App min-h-screen flex flex-col">
-        {user && <Navbar user={user} />}
+        <Navbar user={user} />
         <main className="flex-grow">
           <Routes>
             <Route 
@@ -59,9 +62,21 @@ function App() {
               path="/profile" 
               element={user ? <ProfilePage /> : <Navigate to="/login" />} 
             />
-            <Route 
-              path="/statistics" 
-              element={user ? <StatisticsPage /> : <Navigate to="/login" />} 
+            <Route
+              path="/statistics"
+              element={user ? <StatisticsPage /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/about"
+              element={<About />}
+            />
+            <Route
+              path="/privacy"
+              element={<PrivacyPolicy />}
+            />
+            <Route
+              path="/contact"
+              element={<Contact />}
             />
           </Routes>
         </main>

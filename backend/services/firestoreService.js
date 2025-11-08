@@ -288,6 +288,72 @@ export const updateUserPreferences = async (userId, preferences) => {
 };
 
 /**
+ * Get user profile
+ */
+export const getUserProfile = async (userId) => {
+  try {
+    const userDoc = await db.collection(COLLECTIONS.USERS).doc(userId).get();
+    
+    if (!userDoc.exists) {
+      return {
+        name: '',
+        gender: '',
+        age: null,
+        email: ''
+      };
+    }
+    
+    const data = userDoc.data();
+    return {
+      name: data.name || '',
+      gender: data.gender || '',
+      age: data.age || null,
+      email: data.email || ''
+    };
+  } catch (error) {
+    console.error('Error getting user profile:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update user profile
+ */
+export const updateUserProfile = async (userId, profileData) => {
+  try {
+    const userRef = db.collection(COLLECTIONS.USERS).doc(userId);
+    const userDoc = await userRef.get();
+    
+    const updateData = {
+      ...profileData,
+      updatedAt: Timestamp.now()
+    };
+    
+    if (!userDoc.exists) {
+      updateData.createdAt = Timestamp.now();
+      updateData.firebaseUID = userId;
+      updateData.preferences = {
+        loanPreference: 'lowestEMI'
+      };
+    }
+    
+    await userRef.set(updateData, { merge: true });
+    
+    const updatedDoc = await userRef.get();
+    const data = updatedDoc.data();
+    return {
+      name: data.name || '',
+      gender: data.gender || '',
+      age: data.age || null,
+      email: data.email || ''
+    };
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
+/**
  * Sync user (create or get user)
  */
 export const syncUser = async (firebaseUID, email) => {
@@ -299,6 +365,9 @@ export const syncUser = async (firebaseUID, email) => {
       await userRef.set({
         firebaseUID,
         email,
+        name: '',
+        gender: '',
+        age: null,
         preferences: {
           loanPreference: 'lowestEMI'
         },

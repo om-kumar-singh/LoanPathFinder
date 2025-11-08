@@ -7,10 +7,10 @@ const Home = () => {
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-deep-blue to-primary-teal text-white py-20">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-4">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4">
             🏦 LoanPathfinder
           </h1>
-          <p className="text-xl mb-8 opacity-90">
+          <p className="text-lg md:text-xl mb-8 opacity-90">
             Transparent Loan Assessment Platform with Explainable AI
           </p>
           <Link
@@ -23,11 +23,11 @@ const Home = () => {
       </div>
 
       {/* How It Works Section */}
-      <div className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-deep-blue text-center mb-12">
+      <div className="container mx-auto px-4 py-12 md:py-16">
+        <h2 className="text-2xl md:text-3xl font-bold text-deep-blue text-center mb-8 md:mb-12">
           How It Works
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
           <div className="neumorphic-card text-center">
             <div className="text-4xl mb-4">📝</div>
             <h3 className="text-xl font-semibold text-deep-blue mb-2">

@@ -42,21 +42,33 @@ const AnalyticsDashboard = ({ analyticsData, financialData, userId }) => {
   };
 
   const handleSaveSimulation = async () => {
+    if (!userId) {
+      alert('Please log in to save simulations');
+      return;
+    }
+    
     try {
-      await axios.post(`${API_URL}/api/simulations`, {
-        userId: userId || 'current-user',
-        financialData,
+      const response = await axios.post(`${API_URL}/api/simulations`, {
+        userId: userId,
+        financialData: financialData || {},
         score: prediction,
-        explanation,
-        riskCategory,
-        estimatedAPR,
+        explanation: explanation || {},
+        riskCategory: riskCategory || 'Moderate',
+        estimatedAPR: estimatedAPR || 0,
         timestamp: new Date().toISOString()
       });
-      alert('Simulation saved successfully!');
-      navigate('/profile');
+      
+      if (response.data && response.data.message) {
+        alert('Simulation saved successfully!');
+        navigate('/profile');
+      } else {
+        alert('Simulation saved successfully!');
+        navigate('/profile');
+      }
     } catch (err) {
       console.error('Error saving simulation:', err);
-      alert('Failed to save simulation');
+      const errorMsg = err.response?.data?.error || err.message || 'Failed to save simulation';
+      alert(`Failed to save simulation: ${errorMsg}`);
     }
   };
 

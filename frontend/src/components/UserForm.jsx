@@ -18,6 +18,7 @@ const UserForm = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [error, setError] = useState('');
 
   const calculateProgress = () => {
     const fields = Object.values(formData);
@@ -82,6 +83,7 @@ const UserForm = () => {
     }
 
     setLoading(true);
+    setError(''); // Clear previous errors
     try {
       const response = await axios.post(`${API_URL}/api/predict`, formData);
       // Navigate to dashboard with analytics data
@@ -93,19 +95,38 @@ const UserForm = () => {
       });
     } catch (error) {
       console.error('Error generating analytics:', error);
-      alert('Failed to generate analytics. Please try again.');
+      let errorMessage = 'Failed to generate analytics. Please try again.';
+      
+      if (error.response) {
+        // Server responded with error
+        if (error.response.status === 500) {
+          errorMessage = 'AI service is temporarily unavailable. Please try again later.';
+        } else if (error.response.status === 503) {
+          errorMessage = 'Service is currently unavailable. Please check if Flask AI service is running.';
+        } else {
+          errorMessage = error.response.data?.error || errorMessage;
+        }
+      } else if (error.request) {
+        // Request made but no response
+        errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+      } else {
+        // Error setting up request
+        errorMessage = error.message || errorMessage;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-deep-blue mb-2">
+    <div className="container mx-auto px-4 py-6 md:py-8 max-w-4xl">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-4xl font-bold text-deep-blue mb-2">
           Financial Information Form
         </h1>
-        <p className="text-primary-text opacity-70">
+        <p className="text-primary-text opacity-70 text-sm md:text-base">
           Fill in your details to get personalized loan insights
         </p>
       </div>
@@ -125,6 +146,12 @@ const UserForm = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="neumorphic-card">
+        {error && (
+          <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p className="font-semibold">Error</p>
+            <p>{error}</p>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-deep-blue font-semibold mb-2">
